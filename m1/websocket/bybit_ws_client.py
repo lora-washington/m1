@@ -7,31 +7,6 @@ import time
 import requests
 import aiohttp  # Не забудь установить aiohttp в requirements.txt
 
-async def get_balance(self):
-    timestamp = str(int(time.time() * 1000))
-    recv_window = "5000"
-    
-    # Генерируем строку параметров
-    param_str = f"apiKey={self.api_key}&recvWindow={recv_window}&timestamp={timestamp}"
-    
-    # Сигнатура
-    signature = hmac.new(
-        bytes(self.api_secret, "utf-8"),
-        msg=bytes(param_str, "utf-8"),
-        digestmod=hashlib.sha256
-    ).hexdigest()
-
-    url = f"{self.base_rest_url}/v5/account/wallet-balance?{param_str}&sign={signature}"
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            result = await response.json()
-            if 'result' in result and result['result']['list']:
-                coins = result['result']['list'][0]['coin']
-                for c in coins:
-                    if c['coin'] in ['USDT', 'USDC']:
-                        return {c['coin']: float(c['walletBalance'])}
-            return {"USDT": 0.0}
 
 
 class BybitWebSocketClient:
