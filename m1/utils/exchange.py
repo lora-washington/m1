@@ -1,4 +1,4 @@
-from utils.exchange import BybitWebSocketClient  # Убедись, что путь правильный
+from websocket.bybit_ws_client import BybitWebSocketClient
 
 def init_exchange(api_key, api_secret, symbol="USDT", is_testnet=False):
     print(f"✅ Биржа инициализирована для пары: {symbol}")
