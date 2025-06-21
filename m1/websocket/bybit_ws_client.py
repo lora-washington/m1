@@ -30,19 +30,19 @@ class BybitWebSocketClient:
             self.base_rest_url = "https://api-testnet.bybit.com"
 
 
-   async def get_balance(self):
-    timestamp = str(int(time.time() * 1000))
-    recv_window = "5000"
-
-    param_str = f"apiKey={self.api_key}&recvWindow={recv_window}&timestamp={timestamp}"
-    signature = hmac.new(
-        bytes(self.api_secret, "utf-8"),
-        msg=bytes(param_str, "utf-8"),
-        digestmod=hashlib.sha256
-    ).hexdigest()
-
-    url = f"{self.base_rest_url}/v5/account/wallet-balance?accountType=UNIFIED&{param_str}&sign={signature}"
-
+    async def get_balance(self):
+        timestamp = str(int(time.time() * 1000))
+        recv_window = "5000"
+    
+        param_str = f"apiKey={self.api_key}&recvWindow={recv_window}&timestamp={timestamp}"
+        signature = hmac.new(
+            bytes(self.api_secret, "utf-8"),
+            msg=bytes(param_str, "utf-8"),
+            digestmod=hashlib.sha256
+        ).hexdigest()
+    
+        url = f"{self.base_rest_url}/v5/account/wallet-balance?accountType=UNIFIED&{param_str}&sign={signature}"
+    
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             try:
