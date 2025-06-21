@@ -55,17 +55,12 @@ class BybitWebSocketClient:
                 print(f"[ERROR] Пустой ответ от API: {await response.text()}")
                 return {"USDT": 0.0}
 
-            try:
+            if 'result' in result and result['result'].get('list'):
                 coins = result['result']['list'][0]['coin']
                 for c in coins:
-                    if c['coin'] == 'USDT':
-                        # ✅ Для Unified Account используй 'availableToWithdraw' вместо 'walletBalance'
-                        balance = c.get('availableToWithdraw') or c.get('walletBalance') or 0.0
-                        return {'USDT': float(balance)}
-            except Exception as e:
-                print(f"[ERROR] Неожиданная структура ответа: {e}")
-                print(result)
-
+                    if c['coin'] in ['USDT', 'USDC']:
+                        return {c['coin']: float(c['walletBalance'])}
+            print(f"[ERROR] Unexpected response format: {result}")
             return {"USDT": 0.0}
 
     # остальной код: connect, handle_message, place_market_order и т.д.
