@@ -34,7 +34,7 @@ class BybitWebSocketClient:
         timestamp = str(int(time.time() * 1000))
         recv_window = "5000"
     
-        param_str = f"apiKey={self.api_key}&recvWindow={recv_window}&timestamp={timestamp}"
+        param_str = f"apiKey={self.api_key}&timestamp={timestamp}&recvWindow={recv_window}"
         signature = hmac.new(
             bytes(self.api_secret, "utf-8"),
             msg=bytes(param_str, "utf-8"),
