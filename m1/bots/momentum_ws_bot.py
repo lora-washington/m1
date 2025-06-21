@@ -9,11 +9,11 @@ class MomentumBot:
     def __init__(self, api_key, api_secret, symbol, capital_per_trade=50.0, rsi_max=35,
                  take_profit_pct=2.5, trailing_stop_pct=1.2):
         self.client = BybitWebSocketClient(
-         api_key=api_key,
-         api_secret=api_secret,
-         symbol=symbol,
-         is_testnet=False,
-         market_type="spot"
+            api_key=api_key,
+            api_secret=api_secret,
+            symbol=symbol,
+            is_testnet=False,
+            market_type="spot"
         )
         self.symbol = symbol
         self.capital_per_trade = capital_per_trade
