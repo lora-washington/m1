@@ -1,7 +1,7 @@
 import logging
 from aiogram import Bot, Dispatcher, types
 from utils.pnl_logger import read_latest_pnl
-
+from exchange_client import client
 from aiogram.types import ParseMode
 from aiogram.utils import executor
 import asyncio
