@@ -8,14 +8,26 @@ import requests
 
 
 class BybitWebSocketClient:
-    def __init__(self, api_key, api_secret, symbol="DOGEUSDT", is_testnet=False):
+    def __init__(self, api_key, api_secret, symbol="DOGEUSDT", is_testnet=False, market_type="spot"):
         self.api_key = api_key
         self.api_secret = api_secret
-        self.symbol = symbol
-        self.base_ws_url = "wss://stream.bybit.com/v5/public/spot"
+        self.symbol = symbol.upper()
+        self.market_type = market_type
+
+        # Актуальные WebSocket URL от Bybit v5
+        if market_type == "spot":
+            self.base_ws_url = "wss://stream.bybit.com/v5/public/spot"
+        elif market_type == "linear":
+            self.base_ws_url = "wss://stream.bybit.com/v5/public/linear"
+        elif market_type == "inverse":
+            self.base_ws_url = "wss://stream.bybit.com/v5/public/inverse"
+        else:
+            raise ValueError("Unsupported market_type. Use 'spot', 'linear', or 'inverse'.")
+
         self.base_rest_url = "https://api.bybit.com"
         if is_testnet:
             self.base_rest_url = "https://api-testnet.bybit.com"
+
 
 
     async def connect(self, callback): 
