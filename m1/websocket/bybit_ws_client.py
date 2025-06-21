@@ -35,13 +35,12 @@ async def get_balance(self):
 
 
 class BybitWebSocketClient:
-    def __init__(self, api_key, api_secret, symbol="DOGEUSDT", is_testnet=False, market_type="spot"):
+    def __init__(self, api_key, api_secret, symbol, is_testnet=False, market_type="spot"):
         self.api_key = api_key
         self.api_secret = api_secret
         self.symbol = symbol.upper()
         self.market_type = market_type
 
-        # Актуальные WebSocket URL от Bybit v5
         if market_type == "spot":
             self.base_ws_url = "wss://stream.bybit.com/v5/public/spot"
         elif market_type == "linear":
