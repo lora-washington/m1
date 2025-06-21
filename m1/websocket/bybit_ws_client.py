@@ -33,7 +33,7 @@ class BybitWebSocketClient:
     async def get_balance(self):
         timestamp = str(int(time.time() * 1000))
         recv_window = "5000"
-        
+
         param_str = f"apiKey={self.api_key}&recvWindow={recv_window}&timestamp={timestamp}"
         signature = hmac.new(
             bytes(self.api_secret, "utf-8"),
@@ -45,12 +45,22 @@ class BybitWebSocketClient:
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
-                result = await response.json()
-                if 'result' in result and result['result']['list']:
+                try:
+                    result = await response.json()
+                except Exception as e:
+                    print(f"[ERROR] Не удалось декодировать JSON: {e}")
+                    return {"USDT": 0.0}
+
+                if result is None:
+                    print(f"[ERROR] Пустой ответ от API: {await response.text()}")
+                    return {"USDT": 0.0}
+
+                if 'result' in result and result['result'].get('list'):
                     coins = result['result']['list'][0]['coin']
                     for c in coins:
                         if c['coin'] in ['USDT', 'USDC']:
                             return {c['coin']: float(c['walletBalance'])}
+                print(f"[ERROR] Unexpected response format: {result}")
                 return {"USDT": 0.0}
 
     # остальной код: connect, handle_message, place_market_order и т.д.
