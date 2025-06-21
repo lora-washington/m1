@@ -41,7 +41,7 @@ class BybitWebSocketClient:
             digestmod=hashlib.sha256
         ).hexdigest()
     
-        url = f"{self.base_rest_url}/v5/account/wallet-balance?accountType=UNIFIED&{param_str}&sign={signature}"
+        url = f"{self.base_rest_url}/v5/account/wallet-balance?{param_str}&sign={signature}"
     
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
