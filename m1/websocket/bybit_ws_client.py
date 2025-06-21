@@ -31,37 +31,42 @@ class BybitWebSocketClient:
 
 
     async def get_balance(self):
-        timestamp = str(int(time.time() * 1000))
-        recv_window = "5000"
+    timestamp = str(int(time.time() * 1000))
+    recv_window = "5000"
 
-        param_str = f"apiKey={self.api_key}&recvWindow={recv_window}&timestamp={timestamp}"
-        signature = hmac.new(
-            bytes(self.api_secret, "utf-8"),
-            msg=bytes(param_str, "utf-8"),
-            digestmod=hashlib.sha256
-        ).hexdigest()
+    param_str = f"apiKey={self.api_key}&recvWindow={recv_window}&timestamp={timestamp}"
+    signature = hmac.new(
+        bytes(self.api_secret, "utf-8"),
+        msg=bytes(param_str, "utf-8"),
+        digestmod=hashlib.sha256
+    ).hexdigest()
 
-        url = f"{self.base_rest_url}/v5/account/wallet-balance?{param_str}&sign={signature}"
+    url = f"{self.base_rest_url}/v5/account/wallet-balance?{param_str}&sign={signature}"
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                try:
-                    result = await response.json()
-                except Exception as e:
-                    print(f"[ERROR] Не удалось декодировать JSON: {e}")
-                    return {"USDT": 0.0}
-
-                if result is None:
-                    print(f"[ERROR] Пустой ответ от API: {await response.text()}")
-                    return {"USDT": 0.0}
-
-                if 'result' in result and result['result'].get('list'):
-                    coins = result['result']['list'][0]['coin']
-                    for c in coins:
-                        if c['coin'] in ['USDT', 'USDC']:
-                            return {c['coin']: float(c['walletBalance'])}
-                print(f"[ERROR] Unexpected response format: {result}")
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            try:
+                result = await response.json()
+            except Exception as e:
+                print(f"[ERROR] Не удалось декодировать JSON: {e}")
                 return {"USDT": 0.0}
+
+            if result is None:
+                print(f"[ERROR] Пустой ответ от API: {await response.text()}")
+                return {"USDT": 0.0}
+
+            try:
+                coins = result['result']['list'][0]['coin']
+                for c in coins:
+                    if c['coin'] == 'USDT':
+                        # ✅ Для Unified Account используй 'availableToWithdraw' вместо 'walletBalance'
+                        balance = c.get('availableToWithdraw') or c.get('walletBalance') or 0.0
+                        return {'USDT': float(balance)}
+            except Exception as e:
+                print(f"[ERROR] Неожиданная структура ответа: {e}")
+                print(result)
+
+            return {"USDT": 0.0}
 
     # остальной код: connect, handle_message, place_market_order и т.д.
 
