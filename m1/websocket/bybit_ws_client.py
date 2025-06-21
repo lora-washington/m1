@@ -30,7 +30,7 @@ class BybitWebSocketClient:
             self.base_rest_url = "https://api-testnet.bybit.com"
 
 
-    async def get_balance(self):
+   async def get_balance(self):
     timestamp = str(int(time.time() * 1000))
     recv_window = "5000"
 
