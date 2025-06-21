@@ -56,12 +56,11 @@ class BybitWebSocketClient:
                     return {"USDT": 0.0}
     
                 if 'result' in result and result['result'].get('list'):
-                    coins = result['result']['list'][0]['coin']
-                    for c in coins:
-                        if c['coin'] in ['USDT', 'USDC']:
-                            return {c['coin']: float(c['walletBalance'])}
-                print(f"[ERROR] Unexpected response format: {result}")
-                return {"USDT": 0.0}
+                    for wallet in result['result']['list']:
+                        for c in wallet.get('coin', []):
+                            if c['coin'] in ['USDT', 'USDC']:
+                                return {c['coin']: float(c['walletBalance'])}
+
 
     # остальной код: connect, handle_message, place_market_order и т.д.
 
