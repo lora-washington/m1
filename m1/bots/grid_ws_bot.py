@@ -15,7 +15,13 @@ class GridBot:
 
         self.max_orders = 5  # Можно сделать параметром позже
         self.orders = []
-        self.ws_client = BybitWebSocketClient(symbol, self.on_price_update)
+        self.ws_client = BybitWebSocketClient(
+          api_key=self.api_key,
+          api_secret=self.api_secret,
+          symbol=self.symbol,
+          is_testnet=False,
+          market_type="spot"
+        )
         self.initial_price = None
         self.logger = logging.getLogger(__name__)
 
