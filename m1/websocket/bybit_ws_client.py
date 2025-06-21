@@ -43,25 +43,29 @@ class BybitWebSocketClient:
     
         url = f"{self.base_rest_url}/v5/account/wallet-balance?accountType=UNIFIED&{param_str}&sign={signature}"
     
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            try:
-                result = await response.json()
-            except Exception as e:
-                print(f"[ERROR] Не удалось декодировать JSON: {e}")
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                text = await response.text()
+                print(f"[DEBUG RAW RESPONSE] {text}")  # ← Вставь для отладки
+    
+                try:
+                    result = await response.json()
+                except Exception as e:
+                    print(f"[ERROR] Не удалось декодировать JSON: {e}")
+                    return {"USDT": 0.0}
+    
+                if result is None:
+                    print(f"[ERROR] Пустой ответ от API: {text}")
+                    return {"USDT": 0.0}
+    
+                if 'result' in result and result['result'].get('list'):
+                    coins = result['result']['list'][0]['coin']
+                    for c in coins:
+                        if c['coin'] in ['USDT', 'USDC']:
+                            return {c['coin']: float(c['walletBalance'])}
+    
+                print(f"[ERROR] Unexpected response format: {result}")
                 return {"USDT": 0.0}
-
-            if result is None:
-                print(f"[ERROR] Пустой ответ от API: {await response.text()}")
-                return {"USDT": 0.0}
-
-            if 'result' in result and result['result'].get('list'):
-                print("[DEBUG BALANCE RESPONSE]", json.dumps(result, indent=2))  # ⬅️ ВСТАВЬ ЭТУ СТРОКУ
-                
-                coins = result['result']['list'][0]['coin']
-                for c in coins:
-                    if c['coin'] in ['USDT', 'USDC']:
-                        return {c['coin']: float(c['walletBalance'])}
             
 
     # остальной код: connect, handle_message, place_market_order и т.д.
