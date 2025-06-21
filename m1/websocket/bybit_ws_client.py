@@ -45,6 +45,8 @@ class BybitWebSocketClient:
     
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
+                print(f"[DEBUG URL]: {url}")
+                print(f"[DEBUG STATUS]: {response.status}")
                 text = await response.text()
                 print(f"[DEBUG RAW RESPONSE] {text}")  # ← Вставь для отладки
     
