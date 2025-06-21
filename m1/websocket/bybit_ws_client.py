@@ -42,6 +42,11 @@ class BybitWebSocketClient:
         ).hexdigest()
     
         url = f"{self.base_rest_url}/v5/account/wallet-balance?{param_str}&sign={signature}"
+
+        
+        headers = {
+            "Content-Type": "application/json"
+        }
     
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
