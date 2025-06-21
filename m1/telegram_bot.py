@@ -43,3 +43,6 @@ if __name__ == '__main__':
 async def status_bot(message: types.Message):
     pnl = read_latest_pnl()
     await message.answer(f"📊 Последние сделки:\n<pre>{pnl}</pre>", parse_mode=ParseMode.HTML)
+    
+    balance = await self.client.get_balance()
+    await message.answer(f"💰 Баланс USDT: {balance.get('USDT', 0)}")
