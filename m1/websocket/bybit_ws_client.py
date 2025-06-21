@@ -45,8 +45,10 @@ class BybitWebSocketClient:
 
         
         headers = {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "X-BYBIT-API-KEY": self.api_key
         }
+
     
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
