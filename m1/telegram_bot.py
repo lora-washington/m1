@@ -2,7 +2,6 @@ import logging
 import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ParseMode
-from aiogram.utils import executor
 from utils.pnl_logger import read_latest_pnl
 from websocket.bybit_ws_client import BybitWebSocketClient
 from bots.momentum_ws_bot import MomentumBot
@@ -16,11 +15,10 @@ API_KEY = config["API_KEY"]
 API_SECRET = config["API_SECRET"]
 PAIRS = config["PAIRS"]
 
-
 momentum_config = config["momentum"]
 grid_config = config["grid"]
 
-API_TOKEN = "7433663009:AAEEUjVHMDRLcn9a95YYCWVnmNOxed8YLl4"
+API_TOKEN = config.get("TELEGRAM_TOKEN")
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
@@ -66,3 +64,6 @@ async def status_handler(message: types.Message):
     balance = await BybitWebSocketClient(API_KEY, API_SECRET, "BTCUSDT").get_balance()
     await message.answer(f"\ud83d\udcb0 Баланс USDT: {balance.get('USDT', 0)}")
 
+# === Добавляем функцию запуска ===
+async def start_bot():
+    await dp.start_polling()
