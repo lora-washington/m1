@@ -1,8 +1,6 @@
 import asyncio
-from aiogram import executor
-from telegram_bot import dp  # Берём Dispatcher с логикой
+from telegram_bot import start_bot  # теперь вызываем асинхронную функцию
 
 def start_telegram():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    executor.start_polling(dp, skip_updates=True)
+    loop = asyncio.get_event_loop()
+    loop.create_task(start_bot())
