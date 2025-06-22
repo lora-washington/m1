@@ -2,6 +2,7 @@ import asyncio
 from utils.indicators import calculate_rsi, calculate_ema
 from websocket.bybit_ws_client import BybitWebSocketClient
 from utils.pnl_logger import log_trade
+import numpy as np
 
 class MomentumBot:
     def __init__(self, api_key, api_secret, symbol, capital_per_trade=50.0, rsi_max=35,
