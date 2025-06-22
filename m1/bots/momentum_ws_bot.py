@@ -44,20 +44,19 @@ class MomentumBot:
         elif self.in_position:
             await self.manage_position(price)
 
-    def check_entry_signal(self):
+     def check_entry_signal(self):
         if len(self.prices) < 30:
-            print(f"[ENTRY CHECK] RSI, EMA12, EMA26 → расчёт...")
-            print(f"[ENTRY CHECK] RSI: {rsi:.2f}, EMA12: {ema_fast:.2f}, EMA26: {ema_slow:.2f}")
-
+            print("[ENTRY CHECK] Недостаточно данных для расчёта RSI и EMA.")
             return False
-
+    
         closes = self.prices[-30:]
         rsi = calculate_rsi(closes, period=14)[-1]
         ema_fast = calculate_ema(closes, period=12)[-1]
         ema_slow = calculate_ema(closes, period=26)[-1]
-
-        print(f"[CHECK] RSI: {rsi:.2f} | EMA Fast: {ema_fast:.2f} | EMA Slow: {ema_slow:.2f}")
+    
+        print(f"[ENTRY CHECK] RSI: {rsi:.2f}, EMA12: {ema_fast:.2f}, EMA26: {ema_slow:.2f}")
         return rsi < self.rsi_max and ema_fast > ema_slow
+
 
     async def enter_position(self, price):
         self.entry_price = price
