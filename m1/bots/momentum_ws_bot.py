@@ -1,5 +1,5 @@
 import asyncio
-from utils.indicators import calculate_rsi, calculate_ema, calculate_obv, calculate_volume_ma
+from utils.indicators import calculate_rsi, calculate_ema
 from websocket.bybit_ws_client import BybitWebSocketClient
 from utils.pnl_logger import log_trade
 
@@ -20,7 +20,6 @@ class MomentumBot:
         self.trailing_stop_pct = trailing_stop_pct
 
         self.prices = []
-        self.volumes = []  # Пока не используем
         self.in_position = False
         self.entry_price = None
         self.amount = None
@@ -30,7 +29,7 @@ class MomentumBot:
     async def start(self):
         await self.client.connect(self.on_price_update)
 
-    async def on_price_update(self, price, *_):  # ← ожидаем float
+    async def on_price_update(self, price, *_):
         price = float(price)
         print(f"[MOMENTUM DEBUG] Price: {price}, In Position: {self.in_position}")
 
@@ -38,33 +37,29 @@ class MomentumBot:
         if len(self.prices) > 100:
             self.prices.pop(0)
 
-        if not self.in_position and self.check_entry_signal():
-            await self.enter_position(price)
-        elif self.in_position:
-            await self.manage_position(price)
+        try:
+            if not self.in_position and self.check_entry_signal():
+                await self.enter_position(price)
+            elif self.in_position:
+                await self.manage_position(price)
+        except Exception as e:
+            print(f"[MOMENTUM ERROR] Ошибка в on_price_update: {e}")
 
     def check_entry_signal(self):
+        if len(self.prices) < 30:
+            print("[ENTRY CHECK] Недостаточно данных для расчёта RSI и EMA.")
+            return False
+
         try:
-            if len(self.prices) < 30:
-                print("[ENTRY CHECK] Недостаточно данных для расчёта RSI и EMA.")
-                return False
-    
             closes = self.prices[-30:]
-    
-            rsi_series = calculate_rsi(closes, period=14)
-            ema_fast_series = calculate_ema(closes, period=12)
-            ema_slow_series = calculate_ema(closes, period=26)
-    
-            def last_value(x):
-                return x[-1] if isinstance(x, (list, tuple)) else x
-    
-            rsi = last_value(rsi_series)
-            ema_fast = last_value(ema_fast_series)
-            ema_slow = last_value(ema_slow_series)
-    
-            print(f"[ENTRY CHECK] RSI: {rsi:.2f}, EMA12: {ema_fast:.2f}, EMA26: {ema_slow:.2f}")
-            return rsi < self.rsi_max and ema_fast > ema_slow
-    
+
+            rsi_val = calculate_rsi(closes, period=14)[-1]
+            ema_fast_val = calculate_ema(closes, period=12)[-1]
+            ema_slow_val = calculate_ema(closes, period=26)[-1]
+
+            print(f"[ENTRY CHECK] RSI: {rsi_val:.2f}, EMA12: {ema_fast_val:.2f}, EMA26: {ema_slow_val:.2f}")
+            return rsi_val < self.rsi_max and ema_fast_val > ema_slow_val
+
         except Exception as e:
             print(f"[ENTRY CHECK ERROR] Ошибка при расчёте RSI/EMA: {e}")
             return False
@@ -72,7 +67,6 @@ class MomentumBot:
     async def enter_position(self, price):
         self.entry_price = price
         self.amount = round(self.capital_per_trade / price, 4)
-        print(f"[ENTERING] Buying {self.amount} {self.symbol} @ {price}")
         self.high_price = price
         self.trailing_stop = price * (1 - self.trailing_stop_pct / 100)
         self.in_position = True
