@@ -75,16 +75,21 @@ class MomentumBot:
             return False
 
     async def enter_position(self, price):
-        self.entry_price = price
         self.amount = round(self.capital_per_trade / price, 6)
-        self.high_price = price
-        self.trailing_stop = price * (1 - self.trailing_stop_pct / 100)
-        self.in_position = True
-
-        print(f"[ENTRY] BUY @ {price} x {self.amount}")
+        print(f"[ENTRY] TRY BUY @ {price} x {self.amount}")
+    
         try:
             response = self.client.place_market_order("BUY", self.amount)
             print(f"[ORDER RESPONSE] {response}")
+            if response.get("retCode") == 0:
+                fill_price = float(response['result']['orderPrice']) if response['result']['orderPrice'] else price
+                self.entry_price = fill_price
+                self.high_price = fill_price
+                self.trailing_stop = fill_price * (1 - self.trailing_stop_pct / 100)
+                self.in_position = True
+                print(f"[ENTRY SUCCESS] Bought at {fill_price}")
+            else:
+                print(f"[ENTRY FAIL] Не удалось купить: {response.get('retMsg')}")
         except Exception as e:
             print(f"[ORDER ERROR] {e}")
 
@@ -103,10 +108,20 @@ class MomentumBot:
             await self.exit_position(price)
 
     async def exit_position(self, price):
-        print(f"[EXIT] SELL @ {price}")
-        self.client.place_market_order("SELL", self.amount)
-        self.in_position = False
-        self.entry_price = None
-        self.amount = None
-        self.high_price = None
-        self.trailing_stop = None
+        print(f"[EXIT] TRY SELL @ {price}")
+        try:
+            response = self.client.place_market_order("SELL", self.amount)
+            print(f"[ORDER RESPONSE] {response}")
+            if response.get("retCode") == 0:
+                fill_price = float(response['result']['orderPrice']) if response['result']['orderPrice'] else price
+                log_trade(self.symbol, "SELL", self.amount, self.entry_price, fill_price)
+                self.in_position = False
+                self.entry_price = None
+                self.amount = None
+                self.high_price = None
+                self.trailing_stop = None
+                print(f"[EXIT SUCCESS] Sold at {fill_price}")
+            else:
+                print(f"[EXIT FAIL] Продажа не удалась: {response.get('retMsg')}")
+        except Exception as e:
+            print(f"[ORDER ERROR] {e}")
