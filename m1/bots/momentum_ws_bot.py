@@ -32,6 +32,8 @@ class MomentumBot:
 
     async def on_price_update(self, price, *_):  # ← теперь ожидаем float, а не JSON
         price = float(price)
+        print(f"[MOMENTUM DEBUG] Price: {price}, In Position: {self.in_position}")
+
         self.prices.append(price)
 
         if len(self.prices) > 100:
@@ -44,6 +46,9 @@ class MomentumBot:
 
     def check_entry_signal(self):
         if len(self.prices) < 30:
+            print(f"[ENTRY CHECK] RSI, EMA12, EMA26 → расчёт...")
+            print(f"[ENTRY CHECK] RSI: {rsi:.2f}, EMA12: {ema_fast:.2f}, EMA26: {ema_slow:.2f}")
+
             return False
 
         closes = self.prices[-30:]
@@ -57,6 +62,7 @@ class MomentumBot:
     async def enter_position(self, price):
         self.entry_price = price
         self.amount = round(self.capital_per_trade / price, 4)
+        print(f"[ENTERING] Buying {self.amount} {self.symbol} @ {price}")
         self.high_price = price
         self.trailing_stop = price * (1 - self.trailing_stop_pct / 100)
         self.in_position = True
