@@ -1,55 +1,60 @@
 import logging
+import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ParseMode
 from aiogram.utils import executor
 from utils.pnl_logger import read_latest_pnl
-from utils.exchange_client import client
-import asyncio
+from websocket.bybit_ws_client import BybitWebSocketClient
+from bots.momentum_ws_bot import MomentumBot
+from bots.grid_ws_bot import GridBot
+from config import API_KEY, API_SECRET, PAIRS
 
-API_TOKEN = '7433663009:AAEEUjVHMDRLcn9a95YYCWVnmNOxed8YLl4'
+from config import momentum as momentum_config
+from config import grid as grid_config
 
-logging.basicConfig(level=logging.INFO)
+API_TOKEN = "7433663009:AAEEUjVHMDRLcn9a95YYCWVnmNOxed8YLl4"
+
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
-@dp.message_handler(commands=['start'])
-async def start_bot(message: types.Message):
-    await message.answer("✅ Бот запущен. Управление активностью доступно через Telegram-команды.")
+running_bots = []
 
-@dp.message_handler(commands=['stop'])
-async def stop_bot(message: types.Message):
-    try:
-        from websocket import momentum_ws_bot
-        if hasattr(momentum_ws_bot, 'active_bot') and momentum_ws_bot.active_bot:
-            momentum_ws_bot.active_bot.stop()
-            await message.answer("🛑 Бот остановлен. Остановить процессы можно через Telegram-управление.")
-        else:
-            await message.answer("ℹ️ Бот не был активен.")
-    except Exception as e:
-        await message.answer(f"❌ Ошибка при остановке бота: {e}")
+@dp.message_handler(commands=["start"])
+async def start_handler(message: types.Message):
+    await message.answer("\u2705 Бот запущен. Запускаю торговлю...")
 
-@dp.message_handler(commands=['status_debug'])
-async def status_debug_bot(message: types.Message):
-    await message.answer("📊 Статус: все работает. Можно внедрить информацию о ценах, позициях и PnL.")
+    for symbol in PAIRS:
+        m_bot = MomentumBot(
+            api_key=API_KEY,
+            api_secret=API_SECRET,
+            symbol=symbol,
+            **momentum_config
+        )
+        g_bot = GridBot(
+            api_key=API_KEY,
+            api_secret=API_SECRET,
+            symbol=symbol,
+            **grid_config
+        )
 
-@dp.message_handler(commands=['restart'])
-async def restart_bot(message: types.Message):
-    await message.answer("♻️ Перезапуск... Поддержка реализуется в логике бота.")
+        task_m = asyncio.create_task(m_bot.start())
+        task_g = asyncio.create_task(g_bot.start())
 
-@dp.message_handler(commands=['status'])
-async def status_bot(message: types.Message):
-    try:
-        pnl = read_latest_pnl()
-        await message.answer(f"📊 Последние сделки:\n<pre>{pnl}</pre>", parse_mode=ParseMode.HTML)
-    except Exception:
-        await message.answer("📊 Последние сделки:\n<pre>No trades yet</pre>", parse_mode=ParseMode.HTML)
+        running_bots.append((task_m, m_bot))
+        running_bots.append((task_g, g_bot))
 
-    try:
-        balance = await client.get_balance()
-        usdt = balance.get("USDT", 0)
-        await message.answer(f"💰 Баланс USDT: {usdt:.2f}")
-    except Exception as e:
-        await message.answer(f"❌ Ошибка получения баланса: {e}")
+@dp.message_handler(commands=["stop"])
+async def stop_handler(message: types.Message):
+    for task, bot_instance in running_bots:
+        task.cancel()
+    running_bots.clear()
+    await message.answer("\ud83d\udd1a Бот остановлен. Остановить процессы можно через Telegram-управление.")
 
-if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+@dp.message_handler(commands=["status"])
+async def status_handler(message: types.Message):
+    pnl = read_latest_pnl()
+    await message.answer(f"\ud83d\udcca Последние сделки:\n<pre>{pnl}</pre>", parse_mode=ParseMode.HTML)
+
+    balance = await BybitWebSocketClient(API_KEY, API_SECRET, "BTCUSDT").get_balance()
+    await message.answer(f"\ud83d\udcb0 Баланс USDT: {balance.get('USDT', 0)}")
+
