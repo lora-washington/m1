@@ -7,7 +7,15 @@ from utils.pnl_logger import read_latest_pnl
 from websocket.bybit_ws_client import BybitWebSocketClient
 from bots.momentum_ws_bot import MomentumBot
 from bots.grid_ws_bot import GridBot
-from config import API_KEY, API_SECRET, PAIRS
+import json
+
+with open("config.json") as f:
+    config = json.load(f)
+
+API_KEY = config["API_KEY"]
+API_SECRET = config["API_SECRET"]
+PAIRS = config["PAIRS"]
+
 
 from config import momentum as momentum_config
 from config import grid as grid_config
