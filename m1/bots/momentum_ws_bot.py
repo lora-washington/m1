@@ -82,9 +82,14 @@ class MomentumBot:
         self.high_price = price
         self.trailing_stop = price * (1 - self.trailing_stop_pct / 100)
         self.in_position = True
-
+    
         print(f"[ENTRY] BUY @ {price} x {self.amount}")
-        self.client.place_market_order("BUY", self.amount)
+        try:
+            response = self.client.place_market_order("BUY", self.amount)
+            print(f"[ORDER RESPONSE] {response}")
+        except Exception as e:
+            print(f"[ORDER ERROR] {e}")
+
 
     async def manage_position(self, price):
         if price > self.high_price:
