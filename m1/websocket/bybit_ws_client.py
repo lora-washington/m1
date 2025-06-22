@@ -105,7 +105,6 @@ class BybitWebSocketClient:
             "timestamp": timestamp
         }
     
-        # Обязательно сортировка по ключам по алфавиту
         param_str = "&".join([f"{key}={params[key]}" for key in sorted(params)])
         signature = hmac.new(
             self.api_secret.encode("utf-8"),
@@ -129,6 +128,7 @@ class BybitWebSocketClient:
     
         print(f"[ORDER] {side} {qty} {self.symbol} → {result}")
         return result
+
 
 
     def _generate_signature(self, params):
