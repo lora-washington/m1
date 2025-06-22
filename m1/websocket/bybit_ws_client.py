@@ -138,13 +138,14 @@ class BybitWebSocketClient:
 
 
 # Пример ручного запуска
-if __name__ == "__main__":
-    async def dummy_callback(price):
-        print(f"[CALLBACK] Получена цена: {price}")
 
-    api_key = "YOUR_KEY"
-    api_secret = "YOUR_SECRET"
-    symbol = "BTCUSDT"
+if __name__ == "__main__":
+    api_key = "Zr6u8oI1yc25YICisE"
+    api_secret = "I1vKdoVnua1xzIke6LbqfJICQ0rxDnvKBppM"
+    symbol = "TRXUSDT"  # Или другой дешевый, чтобы не жалко
+    qty = 50  # Проверь min qty на Bybit
 
     client = BybitWebSocketClient(api_key, api_secret, symbol)
-    asyncio.run(client.connect(dummy_callback))
+    result = client.place_market_order("BUY", qty)
+    print(result)
+
