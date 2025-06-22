@@ -20,7 +20,7 @@ class MomentumBot:
         self.trailing_stop_pct = trailing_stop_pct
 
         self.prices = []
-        self.volumes = []  # пока пусто
+        self.volumes = []  # Пока не используем
         self.in_position = False
         self.entry_price = None
         self.amount = None
@@ -30,8 +30,8 @@ class MomentumBot:
     async def start(self):
         await self.client.connect(self.on_price_update)
 
-    async def on_price_update(self, data):
-        price = float(data)
+    async def on_price_update(self, price, *_):  # ← теперь ожидаем float, а не JSON
+        price = float(price)
         self.prices.append(price)
 
         if len(self.prices) > 100:
@@ -52,7 +52,6 @@ class MomentumBot:
         ema_slow = calculate_ema(closes, period=26)[-1]
 
         print(f"[CHECK] RSI: {rsi:.2f} | EMA Fast: {ema_fast:.2f} | EMA Slow: {ema_slow:.2f}")
-
         return rsi < self.rsi_max and ema_fast > ema_slow
 
     async def enter_position(self, price):
