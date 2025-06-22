@@ -24,17 +24,19 @@ class GridBot:
         )
         self.initial_price = None
         self.logger = logging.getLogger(__name__)
+        self.quantity = None  # Расчёт будет позже в on_price_update
 
 
     async def start(self):
-       await self.ws_client.connect(self.on_price_update)
+        await self.ws_client.connect(self.on_price_update)
 
 
-    def on_price_update(self, price):
+    async def on_price_update(self, price, *_):
         price = Decimal(str(price))
         if not self.initial_price:
             self.initial_price = price
             self.generate_grid(price)
+            self.quantity = round(self.capital_per_level / float(price), 4)
         self.trade_logic(price)
 
     def generate_grid(self, center_price):
@@ -54,19 +56,20 @@ class GridBot:
 
         for level in self.buy_grid:
             if current_price <= level:
-                self.execute_trade('buy', level, current_price)
+                self.execute_trade('BUY', level, current_price)
                 return
 
         for level in self.sell_grid:
             if current_price >= level:
-                self.execute_trade('sell', level, current_price)
+                self.execute_trade('SELL', level, current_price)
                 return
 
     def execute_trade(self, side, level_price, market_price):
         self.logger.info(f"Executed {side.upper()} at {market_price} (Grid Level: {level_price})")
-        pnl = float(self.quantity * (market_price - level_price)) if side == 'sell' else float(self.quantity * (level_price - market_price))
+        pnl = float(self.quantity * (market_price - level_price)) if side == 'SELL' else float(self.quantity * (level_price - market_price))
         log_trade(self.symbol, side.upper(), float(self.quantity), float(level_price), float(market_price))
         self.orders.append({'side': side, 'price': float(market_price)})
+        self.ws_client.place_market_order(side.upper(), self.quantity)
         if len(self.orders) > self.max_orders:
             self.orders.pop(0)
         self.generate_grid(market_price)
