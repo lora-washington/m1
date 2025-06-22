@@ -94,30 +94,39 @@ class BybitWebSocketClient:
             await self.callback(float(price))  
 
     def place_market_order(self, side, qty):
-        url = f"{self.base_rest_url}/spot/v3/order"
-        recv_window = 5000
-        timestamp = int(time.time() * 1000)
-
-        params = {
-            "apiKey": self.api_key,
+        url = f"{self.base_rest_url}/spot/v3/private/order"
+        timestamp = str(int(time.time() * 1000))
+    
+        body = {
             "symbol": self.symbol,
             "side": side,
             "type": "MARKET",
             "qty": str(qty),
-            "timestamp": timestamp,
-            "recvWindow": recv_window
+            "timestamp": timestamp
         }
-
-        sign = self._generate_signature(params)
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        params["sign"] = sign
-        response = requests.post(url, headers=headers, data=params)
-
+    
+        # Строка для подписи
+        param_str = "&".join([f"{key}={body[key]}" for key in sorted(body)])
+        signature = hmac.new(
+            self.api_secret.encode('utf-8'),
+            param_str.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+    
+        headers = {
+            "X-BAPI-API-KEY": self.api_key,
+            "X-BAPI-SIGN": signature,
+            "X-BAPI-TIMESTAMP": timestamp,
+            "Content-Type": "application/json"
+        }
+    
+        response = requests.post(url, headers=headers, data=json.dumps(body))
+    
         try:
             result = response.json()
         except Exception:
             result = response.text
-
+    
         print(f"[ORDER] {side} {qty} {self.symbol} → {result}")
         return result
 
