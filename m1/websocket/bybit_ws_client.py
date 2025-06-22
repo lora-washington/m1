@@ -97,7 +97,7 @@ class BybitWebSocketClient:
         url = f"{self.base_rest_url}/spot/v3/private/order"
         timestamp = str(int(time.time() * 1000))
     
-        body = {
+        params = {
             "symbol": self.symbol,
             "side": side,
             "type": "MARKET",
@@ -105,22 +105,24 @@ class BybitWebSocketClient:
             "timestamp": timestamp
         }
     
-        # Строка для подписи
-        param_str = "&".join([f"{key}={body[key]}" for key in sorted(body)])
+        # Строка для подписи должна быть по алфавиту!
+        param_str = "&".join([f"{key}={params[key]}" for key in sorted(params)])
         signature = hmac.new(
-            self.api_secret.encode('utf-8'),
-            param_str.encode('utf-8'),
+            self.api_secret.encode("utf-8"),
+            param_str.encode("utf-8"),
             hashlib.sha256
         ).hexdigest()
     
         headers = {
+            "Content-Type": "application/json",
             "X-BAPI-API-KEY": self.api_key,
             "X-BAPI-SIGN": signature,
-            "X-BAPI-TIMESTAMP": timestamp,
-            "Content-Type": "application/json"
+            "X-BAPI-TIMESTAMP": timestamp
         }
     
-        response = requests.post(url, headers=headers, data=json.dumps(body))
+        params["sign"] = signature  # Обязательно добавь в payload
+    
+        response = requests.post(url, headers=headers, data=json.dumps(params))
     
         try:
             result = response.json()
@@ -129,6 +131,7 @@ class BybitWebSocketClient:
     
         print(f"[ORDER] {side} {qty} {self.symbol} → {result}")
         return result
+
 
     def _generate_signature(self, params):
         sorted_params = sorted(params.items())
