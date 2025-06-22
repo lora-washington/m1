@@ -3,16 +3,11 @@
   "API_SECRET": "I1vKdoVnua1xzIke6LbqfJICQ0rxDnvKBppM",
   "TELEGRAM_TOKEN": "7433663009:AAEEUjVHMDRLcn9a95YYCWVnmNOxed8YLl4",
   "PAIRS": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "TRXUSDT"],
-  
-  "USE_GRID": false,
-  "USE_MOMENTUM": true,
-
   "grid": {
     "grid_size": 8,
     "spread": 0.3,
     "capital_per_level": 12
   },
-
   "momentum": {
     "capital_per_trade": 12,
     "rsi_max": 70,
@@ -20,3 +15,4 @@
     "trailing_stop_pct": 0.3
   }
 }
+
