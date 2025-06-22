@@ -5,7 +5,7 @@ import hmac
 import hashlib
 import time
 import requests
-import aiohttp  # Не забудь в requirements.txt
+import aiohttp
 
 class BybitWebSocketClient:
     def __init__(self, api_key, api_secret, symbol, is_testnet=False, market_type="spot"):
@@ -56,21 +56,19 @@ class BybitWebSocketClient:
                     print(f"[ERROR] JSON decode error: {e}")
                     return {"USDT": 0.0}
 
-                print("[DEBUG RAW RESPONSE]", result)
-
                 if not result or 'result' not in result or not result['result'].get('list'):
                     print("[ERROR] Invalid or empty balance response.")
                     return {"USDT": 0.0}
 
                 coins = result['result']['list'][0]['coin']
                 for c in coins:
-                    if c['coin'] in ['USDT', 'USDC']:
-                        return {c['coin']: float(c['walletBalance'])}
+                    if c['coin'] == 'USDT':
+                        return {"USDT": float(c['walletBalance'])}
                 return {"USDT": 0.0}
 
     async def connect(self, callback):
         self.callback = callback
-        print(f"[WS CONNECT] Подключаемся к {self.base_ws_url}")
+        print(f"[WS CONNECT] Connecting to {self.base_ws_url}")
         async with websockets.connect(self.base_ws_url) as websocket:
             await self.subscribe_price_stream(websocket)
             async for message in websocket:
@@ -79,71 +77,66 @@ class BybitWebSocketClient:
     async def subscribe_price_stream(self, ws):
         msg = {
             "op": "subscribe",
-            "args": [f"tickers.{self.symbol.upper()}"]
+            "args": [f"tickers.{self.symbol}"]
         }
         print(f"[WS SUBSCRIBE] {msg}")
         await ws.send(json.dumps(msg))
 
     async def handle_message(self, msg):
-        print(f"[WS MESSAGE] {msg}")
         if "data" not in msg:
             return
         price = msg["data"].get("lastPrice")
         if price:
             print(f"[PRICE STREAM] {self.symbol} → {price}")
-            await self.callback(float(price))  
+            await self.callback(float(price))
 
     def place_market_order(self, side, qty):
-        url = f"{self.base_rest_url}/spot/v3/order"
+        url = f"{self.base_rest_url}/v5/order/create"
         timestamp = str(int(time.time() * 1000))
-    
-        params = {
+        recv_window = "5000"
+
+        body = {
+            "category": "spot",
             "symbol": self.symbol,
-            "side": side,
-            "type": "MARKET",
+            "side": side.upper(),
+            "orderType": "Market",
             "qty": str(qty),
-            "timestamp": timestamp
+            "timeInForce": "IOC"
         }
-    
-        param_str = "&".join([f"{key}={params[key]}" for key in sorted(params)])
+
+        payload = json.dumps(body)
+        sign_raw = f"{timestamp}{self.api_key}{recv_window}{payload}"
         signature = hmac.new(
             self.api_secret.encode("utf-8"),
-            param_str.encode("utf-8"),
+            sign_raw.encode("utf-8"),
             hashlib.sha256
         ).hexdigest()
-    
+
         headers = {
-            "Content-Type": "application/json",
             "X-BAPI-API-KEY": self.api_key,
             "X-BAPI-SIGN": signature,
-            "X-BAPI-TIMESTAMP": timestamp
+            "X-BAPI-TIMESTAMP": timestamp,
+            "X-BAPI-RECV-WINDOW": recv_window,
+            "Content-Type": "application/json"
         }
-    
-        response = requests.post(url, headers=headers, data=json.dumps(params))
-    
+
+        response = requests.post(url, headers=headers, data=payload)
+
         try:
             result = response.json()
         except Exception:
             result = response.text
-    
+
         print(f"[ORDER] {side} {qty} {self.symbol} → {result}")
         return result
 
 
-
-    def _generate_signature(self, params):
-        sorted_params = sorted(params.items())
-        query = "&".join(f"{k}={v}" for k, v in sorted_params)
-        return hmac.new(self.api_secret.encode(), query.encode(), hashlib.sha256).hexdigest()
-
-
-# Пример ручного запуска
-
+# ✅ Пример ручного теста
 if __name__ == "__main__":
-    api_key = "Zr6u8oI1yc25YICisE"
-    api_secret = "I1vKdoVnua1xzIke6LbqfJICQ0rxDnvKBppM"
-    symbol = "TRXUSDT"  # Или другой дешевый, чтобы не жалко
-    qty = 50  # Проверь min qty на Bybit
+    api_key = "YOUR_API_KEY"
+    api_secret = "YOUR_API_SECRET"
+    symbol = "TRXUSDT"
+    qty = 50
 
     client = BybitWebSocketClient(api_key, api_secret, symbol)
     result = client.place_market_order("BUY", qty)
