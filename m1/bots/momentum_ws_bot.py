@@ -49,17 +49,19 @@ class MomentumBot:
         if len(self.prices) < 30:
             print("[ENTRY CHECK] Недостаточно данных для расчёта RSI и EMA.")
             return False
-
+    
         try:
             closes = self.prices[-30:]
-
-            rsi_val = calculate_rsi(closes, period=14)[-1]
-            ema_fast_val = calculate_ema(closes, period=12)[-1]
-            ema_slow_val = calculate_ema(closes, period=26)[-1]
-
+    
+            rsi_arr = calculate_rsi(closes, period=14)
+            rsi_val = rsi_arr[-1] if isinstance(rsi_arr, np.ndarray) and len(rsi_arr) else 0
+    
+            ema_fast_val = calculate_ema(closes, period=12)
+            ema_slow_val = calculate_ema(closes, period=26)
+    
             print(f"[ENTRY CHECK] RSI: {rsi_val:.2f}, EMA12: {ema_fast_val:.2f}, EMA26: {ema_slow_val:.2f}")
             return rsi_val < self.rsi_max and ema_fast_val > ema_slow_val
-
+    
         except Exception as e:
             print(f"[ENTRY CHECK ERROR] Ошибка при расчёте RSI/EMA: {e}")
             return False
