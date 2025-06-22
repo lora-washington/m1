@@ -53,9 +53,9 @@ class MomentumBot:
         ema_fast = calculate_ema(closes, period=12)
         ema_slow = calculate_ema(closes, period=26)
         
-        rsi_val = rsi[-1]
-        ema_fast_val = ema_fast[-1]
-        ema_slow_val = ema_slow[-1]
+        rsi_val = rsi
+        ema_fast_val = ema_fast
+        ema_slow_val = ema_slow
 
         print(f"[ENTRY CHECK] RSI: {rsi:.2f}, EMA12: {ema_fast:.2f}, EMA26: {ema_slow:.2f}")
         return rsi < self.rsi_max and ema_fast > ema_slow
