@@ -30,12 +30,11 @@ class MomentumBot:
     async def start(self):
         await self.client.connect(self.on_price_update)
 
-    async def on_price_update(self, price, *_):  # ← теперь ожидаем float, а не JSON
+    async def on_price_update(self, price, *_):  # ← ожидаем float
         price = float(price)
         print(f"[MOMENTUM DEBUG] Price: {price}, In Position: {self.in_position}")
 
         self.prices.append(price)
-
         if len(self.prices) > 100:
             self.prices.pop(0)
 
@@ -44,19 +43,18 @@ class MomentumBot:
         elif self.in_position:
             await self.manage_position(price)
 
-     def check_entry_signal(self):
+    def check_entry_signal(self):
         if len(self.prices) < 30:
             print("[ENTRY CHECK] Недостаточно данных для расчёта RSI и EMA.")
             return False
-    
+
         closes = self.prices[-30:]
         rsi = calculate_rsi(closes, period=14)[-1]
         ema_fast = calculate_ema(closes, period=12)[-1]
         ema_slow = calculate_ema(closes, period=26)[-1]
-    
+
         print(f"[ENTRY CHECK] RSI: {rsi:.2f}, EMA12: {ema_fast:.2f}, EMA26: {ema_slow:.2f}")
         return rsi < self.rsi_max and ema_fast > ema_slow
-
 
     async def enter_position(self, price):
         self.entry_price = price
