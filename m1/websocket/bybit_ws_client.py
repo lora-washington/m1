@@ -89,6 +89,7 @@ class BybitWebSocketClient:
         price = msg["data"].get("lastPrice")
         if price:
             print(f"[PRICE STREAM] {self.symbol} → {price}")
+            await self.callback(float(price))  
 
     def place_market_order(self, side, qty):
         url = f"{self.base_rest_url}/spot/v3/order"
