@@ -5,7 +5,7 @@ import hmac
 import hashlib
 import time
 import requests
-import aiohttp  # Не забудь установить aiohttp в requirements.txt
+import aiohttp  # Не забудь в requirements.txt
 
 class BybitWebSocketClient:
     def __init__(self, api_key, api_secret, symbol, is_testnet=False, market_type="spot"):
@@ -70,6 +70,7 @@ class BybitWebSocketClient:
 
     async def connect(self, callback):
         self.callback = callback
+        print(f"[WS CONNECT] Подключаемся к {self.base_ws_url}")
         async with websockets.connect(self.base_ws_url) as websocket:
             await self.subscribe_price_stream(websocket)
             async for message in websocket:
@@ -77,13 +78,14 @@ class BybitWebSocketClient:
 
     async def subscribe_price_stream(self, ws):
         msg = {
-            "topic": f"tickers.{self.symbol.lower()}",
-            "event": "sub",
-            "params": {}
+            "op": "subscribe",
+            "args": [f"tickers.{self.symbol.upper()}"]
         }
+        print(f"[WS SUBSCRIBE] {msg}")
         await ws.send(json.dumps(msg))
 
     async def handle_message(self, msg):
+        print(f"[WS MESSAGE] {msg}")
         if "data" not in msg:
             return
         price = msg["data"].get("lastPrice")
@@ -125,14 +127,14 @@ class BybitWebSocketClient:
         return hmac.new(self.api_secret.encode(), query.encode(), hashlib.sha256).hexdigest()
 
 
+# Пример ручного запуска
 if __name__ == "__main__":
-    import configparser
+    async def dummy_callback(price):
+        print(f"[CALLBACK] Получена цена: {price}")
 
-    config = configparser.ConfigParser()
-    config.read("config.ini")
-    api_key = config["bybit"]["api_key"]
-    api_secret = config["bybit"]["api_secret"]
-    symbol = config["bybit"]["symbol"]
+    api_key = "YOUR_KEY"
+    api_secret = "YOUR_SECRET"
+    symbol = "BTCUSDT"
 
-    client = BybitWebSocketClient(api_key, api_secret, symbol=symbol)
-    asyncio.run(client.connect())
+    client = BybitWebSocketClient(api_key, api_secret, symbol)
+    asyncio.run(client.connect(dummy_callback))
