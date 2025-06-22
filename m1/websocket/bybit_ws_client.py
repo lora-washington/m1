@@ -94,7 +94,7 @@ class BybitWebSocketClient:
             await self.callback(float(price))  
 
     def place_market_order(self, side, qty):
-        url = f"{self.base_rest_url}/spot/v3/private/order"
+        url = f"{self.base_rest_url}/spot/v3/order"
         timestamp = str(int(time.time() * 1000))
     
         params = {
@@ -105,7 +105,7 @@ class BybitWebSocketClient:
             "timestamp": timestamp
         }
     
-        # Строка для подписи должна быть по алфавиту!
+        # Обязательно сортировка по ключам по алфавиту
         param_str = "&".join([f"{key}={params[key]}" for key in sorted(params)])
         signature = hmac.new(
             self.api_secret.encode("utf-8"),
@@ -119,8 +119,6 @@ class BybitWebSocketClient:
             "X-BAPI-SIGN": signature,
             "X-BAPI-TIMESTAMP": timestamp
         }
-    
-        params["sign"] = signature  # Обязательно добавь в payload
     
         response = requests.post(url, headers=headers, data=json.dumps(params))
     
