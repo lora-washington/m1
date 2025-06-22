@@ -47,20 +47,25 @@ class MomentumBot:
         if len(self.prices) < 30:
             print("[ENTRY CHECK] Недостаточно данных для расчёта RSI и EMA.")
             return False
-
+    
         closes = self.prices[-30:]
-        rsi_series = calculate_rsi(closes, period=14)
-        ema_fast_series = calculate_ema(closes, period=12)
-        ema_slow_series = calculate_ema(closes, period=26)
     
-        # Извлекаем последний элемент
-        rsi = rsi_series[-1].item() if hasattr(rsi_series[-1], 'item') else rsi_series[-1]
-        ema_fast = ema_fast_series[-1].item() if hasattr(ema_fast_series[-1], 'item') else ema_fast_series[-1]
-        ema_slow = ema_slow_series[-1].item() if hasattr(ema_slow_series[-1], 'item') else ema_slow_series[-1]
+        try:
+            rsi_series = calculate_rsi(closes, period=14)
+            ema_fast_series = calculate_ema(closes, period=12)
+            ema_slow_series = calculate_ema(closes, period=26)
     
-        print(f"[ENTRY CHECK] RSI: {rsi:.2f}, EMA12: {ema_fast:.2f}, EMA26: {ema_slow:.2f}")
+            rsi = float(rsi_series[-1])
+            ema_fast = float(ema_fast_series[-1])
+            ema_slow = float(ema_slow_series[-1])
     
-        return rsi < self.rsi_max and ema_fast > ema_slow
+            print(f"[ENTRY CHECK] RSI: {rsi:.2f}, EMA12: {ema_fast:.2f}, EMA26: {ema_slow:.2f}")
+    
+            return rsi < self.rsi_max and ema_fast > ema_slow
+    
+        except Exception as e:
+            print(f"[ENTRY CHECK ERROR] Ошибка при расчёте RSI/EMA: {e}")
+            return False
 
     async def enter_position(self, price):
         self.entry_price = price
