@@ -9,9 +9,9 @@
     "capital_per_level": 15
   },
   "momentum": {
-    "capital_per_trade": 50,
-    "rsi_max": 35,
-    "take_profit_pct": 2.5,
-    "trailing_stop_pct": 1.2
+    "capital_per_trade": 10,
+    "rsi_max": 70,
+    "take_profit_pct": 0.5,
+    "trailing_stop_pct": 0.3
   }
 }
