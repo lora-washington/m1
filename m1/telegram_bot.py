@@ -2,6 +2,7 @@ import logging
 import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ParseMode
+from aiogram.utils import executor
 from utils.pnl_logger import read_latest_pnl
 from websocket.bybit_ws_client import BybitWebSocketClient
 from bots.momentum_ws_bot import MomentumBot
@@ -18,7 +19,7 @@ PAIRS = config["PAIRS"]
 momentum_config = config["momentum"]
 grid_config = config["grid"]
 
-API_TOKEN = config.get("TELEGRAM_TOKEN")
+API_TOKEN = config.get("TELEGRAM_TOKEN", "your_token_here")
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
@@ -27,7 +28,7 @@ running_bots = []
 
 @dp.message_handler(commands=["start"])
 async def start_handler(message: types.Message):
-    await message.answer("\u2705 Бот запущен. Запускаю торговлю...")
+    await message.answer("✅ Бот запущен. Запускаю торговлю...")
 
     for symbol in PAIRS:
         m_bot = MomentumBot(
@@ -54,16 +55,12 @@ async def stop_handler(message: types.Message):
     for task, bot_instance in running_bots:
         task.cancel()
     running_bots.clear()
-    await message.answer("\ud83d\udd1a Бот остановлен. Остановить процессы можно через Telegram-управление.")
+    await message.answer("🔚 Бот остановлен. Остановить процессы можно через Telegram-управление.")
 
 @dp.message_handler(commands=["status"])
 async def status_handler(message: types.Message):
     pnl = read_latest_pnl()
-    await message.answer(f"\ud83d\udcca Последние сделки:\n<pre>{pnl}</pre>", parse_mode=ParseMode.HTML)
+    await message.answer(f"📊 Последние сделки:\n<pre>{pnl}</pre>", parse_mode=ParseMode.HTML)
 
     balance = await BybitWebSocketClient(API_KEY, API_SECRET, "BTCUSDT").get_balance()
-    await message.answer(f"\ud83d\udcb0 Баланс USDT: {balance.get('USDT', 0)}")
-
-# === Добавляем функцию запуска ===
-async def start_bot():
-    await dp.start_polling()
+    await message.answer(f"💰 Баланс USDT: {balance.get('USDT', 0)}")
