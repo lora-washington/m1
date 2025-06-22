@@ -17,8 +17,8 @@ API_SECRET = config["API_SECRET"]
 PAIRS = config["PAIRS"]
 
 
-from config import momentum as momentum_config
-from config import grid as grid_config
+momentum_config = config["momentum"]
+grid_config = config["grid"]
 
 API_TOKEN = "7433663009:AAEEUjVHMDRLcn9a95YYCWVnmNOxed8YLl4"
 
