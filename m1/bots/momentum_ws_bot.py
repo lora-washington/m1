@@ -49,9 +49,9 @@ class MomentumBot:
             return False
 
         closes = self.prices[-30:]
-        rsi = calculate_rsi(closes, period=14)[-1]
-        ema_fast = calculate_ema(closes, period=12)[-1]
-        ema_slow = calculate_ema(closes, period=26)[-1]
+        rsi = calculate_rsi(closes, period=14)
+        ema_fast = calculate_ema(closes, period=12)
+        ema_slow = calculate_ema(closes, period=26)
 
         print(f"[ENTRY CHECK] RSI: {rsi:.2f}, EMA12: {ema_fast:.2f}, EMA26: {ema_slow:.2f}")
         return rsi < self.rsi_max and ema_fast > ema_slow
