@@ -90,11 +90,12 @@ class BybitWebSocketClient:
             print(f"[PRICE STREAM] {self.symbol} → {price}")
             await self.callback(float(price))
 
+
     def place_market_order(self, side, qty):
         url = f"{self.base_rest_url}/v5/order/create"
         timestamp = str(int(time.time() * 1000))
         recv_window = "5000"
-
+    
         body = {
             "category": "spot",
             "symbol": self.symbol,
@@ -103,7 +104,7 @@ class BybitWebSocketClient:
             "qty": str(qty),
             "timeInForce": "IOC"
         }
-
+    
         payload = json.dumps(body)
         sign_raw = f"{timestamp}{self.api_key}{recv_window}{payload}"
         signature = hmac.new(
@@ -111,7 +112,7 @@ class BybitWebSocketClient:
             sign_raw.encode("utf-8"),
             hashlib.sha256
         ).hexdigest()
-
+    
         headers = {
             "X-BAPI-API-KEY": self.api_key,
             "X-BAPI-SIGN": signature,
@@ -119,15 +120,20 @@ class BybitWebSocketClient:
             "X-BAPI-RECV-WINDOW": recv_window,
             "Content-Type": "application/json"
         }
-
-        response = requests.post(url, headers=headers, data=payload)
-
+    
         try:
+            response = requests.post(url, headers=headers, data=payload)
             result = response.json()
-        except Exception:
-            result = response.text
-
-        print(f"[ORDER] {side} {qty} {self.symbol} → {result}")
+        except Exception as e:
+            print(f"[ORDER ERROR] Exception: {e}")
+            return None
+    
+        if result.get("retCode") != 0:
+            print(f"[ORDER ERROR] Failed to place order: {result.get('retMsg')}")
+            return None
+    
+        # Успешный ордер
+        print(f"[ORDER SUCCESS] {side} {qty} {self.symbol} → OrderID: {result['result'].get('orderId')}")
         return result
 
 
