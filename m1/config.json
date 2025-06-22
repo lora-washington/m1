@@ -4,7 +4,7 @@
   "TELEGRAM_TOKEN": "7433663009:AAEEUjVHMDRLcn9a95YYCWVnmNOxed8YLl4",
   "PAIRS": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "TRXUSDT"],
   
-  "USE_GRID": true,
+  "USE_GRID": false,
   "USE_MOMENTUM": true,
 
   "grid": {
