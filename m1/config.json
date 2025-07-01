@@ -1,7 +1,7 @@
 {
-  "API_KEY": "Zr6u8oI1yc25YICisE",
-  "API_SECRET": "I1vKdoVnua1xzIke6LbqfJICQ0rxDnvKBppM",
-  "TELEGRAM_TOKEN": "7433663009:AAEEUjVHMDRLcn9a95YYCWVnmNOxed8YLl4",
+  "API_KEY": "",
+  "API_SECRET": "",
+  "TELEGRAM_TOKEN": "",
   "PAIRS": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "TRXUSDT"],
   "grid": {
     "grid_size": 8,
